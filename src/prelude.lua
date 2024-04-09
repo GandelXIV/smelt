@@ -39,7 +39,7 @@ end
 function sumids(ents)
   buf = ""
   for i, e in ipairs(ents) do
-    print("--- [IDENTIFY]", e.name, e:identify()) -- TODO remove this
+    print("id: ", e.name, e:identify()) -- TODO remove this
     buf = buf .. e:identify()
   end
   return buf
@@ -55,7 +55,7 @@ function task(ops)
     flattentable(ops.yield, flatouts)
     initial_build = false
     for i, output in ipairs(flatouts) do
-      print("--- [CHECK EXISTS]", output.name)
+      print("exists? ", output.name)
       if not output:exists() then
         initial_build = true
         break
@@ -64,19 +64,20 @@ function task(ops)
 
     -- TODO: in future depend only on build(), not whole smeltfile
     insid = sumids(flatsrcs) .. file("SMELT.lua"):identify()
-    print("--- [IDENTIFY]", file("SMELT.lua").name)  -- dbg
+    print("id: ", file("SMELT.lua").name)  -- dbg
     if not initial_build then
       currentid = insid .. sumids(flatouts)
     end
     -- print(sumids(flatouts))
 
     if initial_build or not cache_search(currentid) then
-      print("[BUILDING]")
+      print("BUILDING...")
       ops.build(srcs)
-      print("[CACHING]")
+      print("CACHING...")
       cache_add(insid .. sumids(flatouts))
       return ops.yield
     end
+    print("SKIPPING!")
 
     return ops.yield
   end
