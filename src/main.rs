@@ -82,9 +82,7 @@ impl Entity for FileEntity {
     fn identify(&self) -> String {
         let mut hash = String::new();
         hash.push_str(&sha256::digest(self.path.to_str().unwrap()));
-        if let Ok(data) = fs::read(&self.path) {
-            hash.push_str(&sha256::digest(data));
-        }
+        hash.push_str(&sha256::digest(fs::read(&self.path).unwrap()));
         hash
     }
 
