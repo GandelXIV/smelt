@@ -37,7 +37,7 @@ end
 function sumids(ents)
   buf = ""
   for i, e in ipairs(ents) do
-    print("[IDENTIFY]", e.name, e:identify()) -- TODO remove this
+    print("--- [IDENTIFY]", e.name, e:identify()) -- TODO remove this
     buf = buf .. e:identify()
   end
   return buf
@@ -53,7 +53,7 @@ function task(ops)
     removeKeysAndCollectValues(ops.yield, flatouts)
     initial_build = false
     for i, output in ipairs(flatouts) do
-      print("[CHECK EXISTS]", output.name)
+      print("--- [CHECK EXISTS]", output.name)
       if not output:exists() then
         initial_build = true
         break
@@ -62,7 +62,7 @@ function task(ops)
 
     -- TODO: in future depend only on build(), not whole smeltfile
     insid = sumids(flatsrcs) .. file("SMELT.lua"):identify()
-    print("[IDENTIFY]", file("SMELT.lua").name)  -- dbg
+    print("--- [IDENTIFY]", file("SMELT.lua").name)  -- dbg
     currentid = insid .. sumids(flatouts)
     -- print(sumids(flatouts))
 
@@ -70,7 +70,6 @@ function task(ops)
       print("[BUILDING]")
       ops.build(srcs)
       print("[CACHING]")
-      print(ops.yield.output:exists())
       cache_add(insid .. sumids(flatouts))
       return ops.yield
     end

@@ -12,18 +12,21 @@ use mlua::UserData;
 use mlua::UserDataFields;
 use mlua::UserDataMethods;
 use mlua::{self, Lua};
-use std::env;
+use std::env::current_dir;
+use std::env::set_current_dir;
 use std::fs;
 use std::fs::File;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
 use std::io::BufRead;
 use std::io::BufReader;
+use std::path::Path;
 use std::path::PathBuf;
 
 const CACHE_PATH: &str = ".cache";
 
 fn lx_cache_search(_: &Lua, id: String) -> Result<bool, Error> {
+    drop(File::create_new(CACHE_PATH));
     let cache = File::open(CACHE_PATH)?;
     let reader = BufReader::new(cache);
 
@@ -104,11 +107,11 @@ impl UserData for FileEntity {
     }
 }
 
-fn main() {
-    let target = env::args().last().expect("No target provided");
-
+fn run_task(pkg: &Path, target: &str) {
     let lua = Lua::new();
     let globals = lua.globals();
+
+    println!("[STARTING TASK] {} : {}", pkg.display(), target);
 
     // setup
 
@@ -133,6 +136,9 @@ fn main() {
 
     // run task
 
+    let previous_work_dir = current_dir().unwrap();
+    set_current_dir(pkg).unwrap();
+
     lua.load(fs::read_to_string("SMELT.lua").unwrap())
         .exec()
         .expect("Error running SMELT.lua");
@@ -142,4 +148,17 @@ fn main() {
         .expect("Target not defined in SMELT.lua")
         .call::<_, _>(())
         .unwrap();
+    set_current_dir(previous_work_dir).unwrap();
+}
+
+fn main() {
+    for arg in std::env::args() {
+        if arg.contains(':') {
+            let s = arg.split_once(':').unwrap();
+            let (pkg_str, target) = s;
+            println!("{}:{}", pkg_str, target);
+            let pkg = Path::new(pkg_str);
+            run_task(&pkg, target);
+        }
+    }
 }
