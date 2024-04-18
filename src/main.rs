@@ -50,6 +50,11 @@ fn lx_cache_add(_: &Lua, id: String) -> Result<(), Error> {
     Ok(())
 }
 
+fn lx_hash_function(_lua: &Lua, f: Function) -> Result<String, Error> {
+    let hash = md5::compute(f.dump(false));
+    Ok(format!("{:x}", hash))
+}
+
 trait Entity {
     fn exists(&self) -> bool;
     fn identify(&self) -> String;
@@ -81,8 +86,11 @@ impl Entity for FileEntity {
 
     fn identify(&self) -> String {
         let mut hash = String::new();
-        hash.push_str(&sha256::digest(self.path.to_str().unwrap()));
-        hash.push_str(&sha256::digest(fs::read(&self.path).unwrap()));
+        hash.push_str(&format!("{:x}", md5::compute(self.path.to_str().unwrap())));
+        hash.push_str(&format!(
+            "{:x}",
+            md5::compute(fs::read(&self.path).unwrap())
+        ));
         hash
     }
 
@@ -126,6 +134,13 @@ fn run_task(pkg: &Path, target: &str) {
 
     globals
         .set("cache_add", lua.create_function(lx_cache_add).unwrap())
+        .unwrap();
+
+    globals
+        .set(
+            "hash_function",
+            lua.create_function(lx_hash_function).unwrap(),
+        )
         .unwrap();
 
     lua.load(include_str!("prelude.lua"))

@@ -2,8 +2,6 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-
-
 -- app = link {
 --   name = "app",
 --   objs = {
@@ -63,13 +61,17 @@ function task(ops)
     end
 
     -- TODO: in future depend only on build(), not whole smeltfile
-    insid = sumids(flatsrcs) .. file("SMELT.lua"):identify()
-    print("id: ", file("SMELT.lua").name)  -- dbg
+    -- herm = hash_function(ops.build)
+    -- print("build:", herm)    
+    -- insid = herm .. sumids(flatsrcs) 
+
+    insid = sumids(flatsrcs) .. file("SMELT.lua"):identify()  
+
     if not initial_build then
       currentid = insid .. sumids(flatouts)
     end
     -- print(sumids(flatouts))
-
+    
     if initial_build or not cache_search(currentid) then
       print("BUILDING...")
       ops.build(srcs)
@@ -84,6 +86,21 @@ function task(ops)
 end
 
 ------------- UTILS
+
+-- https://stackoverflow.com/questions/9168058/how-to-dump-a-table-to-console
+function dump(o)
+   if type(o) == 'table' then
+      local s = '{ '
+      for k,v in pairs(o) do
+         if type(k) ~= 'number' then k = '"'..k..'"' end
+         s = s .. '['..k..'] = ' .. dump(v) .. ','
+      end
+      return s .. '} '
+   else
+      return tostring(o)
+   end
+end
+
 
 -- Applies function f to every value in array t
 -- https://stackoverflow.com/questions/11669926/is-there-a-lua-equivalent-of-scalas-map-or-cs-select-function
@@ -140,8 +157,6 @@ end
 function make(opts)
   return task {
     fetch = function()
-      fsrcs = {}
-      -- flattentable(opts.srcs, fsrcs)
       return mapchain(opts.srcs, { runsubtask, tofile })
     end,
 

@@ -12,11 +12,11 @@ lib = make {
   cmds = {"gcc -c lib.c -o lib.o"},
 }
 
-hello = make {
-  outs = {"hello"},
-  srcs = {main, lib},
-  cmds = {"gcc main.o lib.o -o hello"}
-}
+-- hello = make {
+--   outs = {"hello"},
+--   srcs = {main, lib},
+--   cmds = {"gcc main.o lib.o -o hello"}
+-- }
 
 -- Nested version
 
