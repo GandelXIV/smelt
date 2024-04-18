@@ -1,6 +1,6 @@
 #!/bin/bash
 
-find . -name .cache -delete
+# find . -name .cache -delete
 find . -name *.o -delete
 
 cargo run examples/hello-world.c:build1

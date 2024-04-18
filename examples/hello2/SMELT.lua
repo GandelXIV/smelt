@@ -14,7 +14,7 @@ lib = make {
 
 hello = make {
   outs = {"hello"},
-  srcs = {main(), lib()},
+  srcs = {main, lib},
   cmds = {"gcc main.o lib.o -o hello"}
 }
 
@@ -28,12 +28,12 @@ hello_nested = make {
       outs = {"main.o"},
       srcs = {"main.c"},
       cmds = {"gcc -c main.c -o main.o"},
-    }(),
+    },
 
     make {
       outs = {"lib.o"},
       srcs = {"lib.c"},
       cmds = {"gcc -c lib.c -o lib.o"},
-    }(),
+    },
   },
 }
