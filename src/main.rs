@@ -65,6 +65,27 @@ fn lx_file(lua: &Lua, name: String) -> Result<AnyUserData, Error> {
     Ok(lua.create_userdata(FileEntity::new(&name))?)
 }
 
+fn lx_file_tree(lua: &Lua, directory: String) -> Result<Table, Error> {
+    let previous_work_dir = current_dir().unwrap();
+    set_current_dir(&directory).unwrap();
+
+    let table = lua.create_table()?;
+    for path in fs::read_dir("./")? {
+        let path = path?;
+        let name = path.file_name().into_string().unwrap();
+        let isfile = path.file_type()?.is_file();
+        let isdir = path.file_type()?.is_dir();
+
+        if isfile {
+            table.set(name.clone(), lx_file(lua, name)?)?;
+        } else if isdir {
+            table.set(name.clone(), lx_file_tree(lua, name)?)?;
+        }
+    }
+    set_current_dir(previous_work_dir).unwrap();
+    Ok(table)
+}
+
 struct FileEntity {
     name: String,
     path: PathBuf,
@@ -123,6 +144,10 @@ fn run_task(pkg: &Path, target: &str) {
 
     globals
         .set("file", lua.create_function(lx_file).unwrap())
+        .unwrap();
+
+    globals
+        .set("file_tree", lua.create_function(lx_file_tree).unwrap())
         .unwrap();
 
     globals

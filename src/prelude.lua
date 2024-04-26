@@ -2,24 +2,6 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
--- app = link {
---   name = "app",
---   objs = {
---     main(),
---     libfoo(),
---   },
--- }
-
--- local main = cc_object {
---   target = "main.c",
---   hdrscan = true,
--- }
-
--- local libfoo = download {
---   out = "libfoo.o",
---   url = "........",
---   md5 = "........",
--- }
 
 ------------- CORE
 
@@ -171,20 +153,12 @@ function make(opts)
 end
 
 -- Compile a single C file using gcc
--- name = C name/file 
--- outf = name/file to write to
+-- ins = C/object filenames 
+-- out = filename to write to
 function gcc_executable(opts)
-  opts.outf = tofile(opts.outf)
-  return task {
-    fetch = function ()
-      return { main = tofile(runsubtask(opts.name)) }
-    end,
-
-    build = function (srcs)
-      os.execute("gcc " .. srcs.main.name .. " -o " .. opts.outf.name )
-    end,
-
-    yield = { output = opts.outf } 
-  } 
+  return make {
+    srcs = opts.ins,
+    outs = { opts.out },
+    cmds = { "gcc " .. table.concat(opts.ins, " ") .. " -o " .. opts.out },
+  }
 end
-
