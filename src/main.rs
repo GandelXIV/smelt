@@ -186,6 +186,7 @@ fn run_task(pkg: &Path, target: &str) {
         .expect("Target not defined in SMELT.lua")
         .call::<_, _>(())
         .unwrap();
+
     set_current_dir(previous_work_dir).unwrap();
 }
 

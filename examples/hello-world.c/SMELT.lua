@@ -1,6 +1,6 @@
 build1 = gcc_executable {
-  name = "main.c",
-  outf = "app",
+  ins = {"main.c"},
+  out = "app",
 }
 
 build2 = make {
