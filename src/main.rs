@@ -7,6 +7,7 @@
 use mlua::AnyUserData;
 use mlua::Error;
 use mlua::Function;
+use mlua::OwnedTable;
 use mlua::Table;
 use mlua::UserData;
 use mlua::UserDataFields;
@@ -50,7 +51,17 @@ fn lx_cache_add(_: &Lua, id: String) -> Result<(), Error> {
     Ok(())
 }
 
+// TODO: d must be relativized
+fn lx_smelt(lua: &Lua, d: String) -> Result<OwnedTable, Error> {
+    let s = d.split_once(':').unwrap();
+    let (pkg_str, target) = s;
+    let pkg = Path::new(pkg_str);
+    Ok(run_task(&pkg, target))
+}
+
+// not fully functional
 fn lx_hash_function(_lua: &Lua, f: Function) -> Result<String, Error> {
+    todo!("hash_function() should not be used");
     let hash = md5::compute(f.dump(false));
     Ok(format!("{:x}", hash))
 }
@@ -134,7 +145,7 @@ impl UserData for FileEntity {
     }
 }
 
-fn run_task(pkg: &Path, target: &str) {
+fn run_task(pkg: &Path, target: &str) -> OwnedTable {
     let lua = Lua::new();
     let globals = lua.globals();
 
@@ -168,6 +179,10 @@ fn run_task(pkg: &Path, target: &str) {
         )
         .unwrap();
 
+    globals
+        .set("smelt", lua.create_function(lx_smelt).unwrap())
+        .unwrap();
+
     lua.load(include_str!("prelude.lua"))
         .exec()
         .expect("Error running prelude.lua");
@@ -181,13 +196,15 @@ fn run_task(pkg: &Path, target: &str) {
         .exec()
         .expect("Error running SMELT.lua");
 
-    let _artifacts: Table = globals
+    let artifacts: Table = globals
         .get::<_, Function>(target)
         .expect("Target not defined in SMELT.lua")
         .call::<_, _>(())
         .unwrap();
 
     set_current_dir(previous_work_dir).unwrap();
+
+    return artifacts.into_owned();
 }
 
 fn main() {
@@ -195,7 +212,6 @@ fn main() {
         if arg.contains(':') {
             let s = arg.split_once(':').unwrap();
             let (pkg_str, target) = s;
-            println!("{}:{}", pkg_str, target);
             let pkg = Path::new(pkg_str);
             run_task(&pkg, target);
         }
